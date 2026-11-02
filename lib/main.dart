@@ -45,19 +45,19 @@ const _skills = [
 
 const _projects = [
   (
-  Icons.payments_outlined,
-  'Fee Management System',
-  'Manage student fees, track payments, and monitor outstanding balances.'
+    Icons.payments_outlined,
+    'Fee Management System',
+    'Manage student fees, track payments, and monitor outstanding balances.',
   ),
   (
-  Icons.fact_check_outlined,
-  'Attendance Management System',
-  'Record student attendance and view daily and monthly attendance reports.'
+    Icons.fact_check_outlined,
+    'Attendance Management System',
+    'Record student attendance and view daily and monthly attendance reports.',
   ),
   (
-  Icons.inventory_2_outlined,
-  'Inventory Management System',
-  'Manage products, track stock levels, and record incoming and outgoing items.'
+    Icons.inventory_2_outlined,
+    'Inventory Management System',
+    'Manage products, track stock levels, and record incoming and outgoing items.',
   ),
 ];
 
@@ -72,6 +72,23 @@ void _toast(BuildContext context, String message) {
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(message)));
 }
+
+Duration _motionDuration(BuildContext context) =>
+    MediaQuery.disableAnimationsOf(context)
+    ? Duration.zero
+    : const Duration(milliseconds: 400);
+
+PageRouteBuilder<T> _fadeRoute<T>(BuildContext context, Widget page) =>
+    PageRouteBuilder<T>(
+      transitionDuration: _motionDuration(context),
+      reverseTransitionDuration: _motionDuration(context),
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+          FadeTransition(
+            opacity: animation.drive(CurveTween(curve: Curves.easeInOut)),
+            child: child,
+          ),
+    );
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -122,19 +139,17 @@ class MyApp extends StatelessWidget {
           minimumSize: const Size(64, 52),
           backgroundColor: _primary,
           foregroundColor: Colors.white,
-          textStyle:
-          const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10)),
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: _primary,
-        contentTextStyle:
-        const TextStyle(color: Colors.white, fontSize: 14),
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        contentTextStyle: const TextStyle(color: Colors.white, fontSize: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     ),
     // Wraps the Navigator, so dialogs and snackbars stay inside the phone
@@ -215,7 +230,10 @@ class _MobilePreview extends StatelessWidget {
                               right: 0,
                               child: Center(
                                 child: _Pill(
-                                    width: 120, height: 34, color: Colors.black),
+                                  width: 120,
+                                  height: 34,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
                             Positioned(
@@ -224,9 +242,10 @@ class _MobilePreview extends StatelessWidget {
                               right: 0,
                               child: Center(
                                 child: _Pill(
-                                    width: 134,
-                                    height: 5,
-                                    color: Color(0x99000000)),
+                                  width: 134,
+                                  height: 5,
+                                  color: Color(0x99000000),
+                                ),
                               ),
                             ),
                           ],
@@ -283,7 +302,8 @@ class _Frame extends StatelessWidget {
 class _Section extends StatelessWidget {
   final String title;
   final Widget child;
-  const _Section({required this.title, required this.child});
+  final Widget? action;
+  const _Section({required this.title, required this.child, this.action});
 
   @override
   Widget build(BuildContext context) => Material(
@@ -301,11 +321,23 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Semantics(
-            header: true,
-            child: Text(title,
-                style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w700, color: _ink)),
+          Row(
+            children: [
+              Expanded(
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _ink,
+                    ),
+                  ),
+                ),
+              ),
+              ?action,
+            ],
           ),
           const SizedBox(height: 12),
           child,
@@ -365,12 +397,15 @@ class _LoginPageState extends State<LoginPage> {
     if (!_form.currentState!.validate()) return;
     final id = _id.text.trim();
     FocusScope.of(context).unfocus();
-    Navigator.of(context).pushReplacement(MaterialPageRoute<void>(
-      builder: (_) => PortfolioPage(
-        // A bare SAP ID is shown as the matching student email.
-        email: id.contains('@') ? id : '$id@$_studentDomain',
+    Navigator.of(context).pushReplacement(
+      _fadeRoute<void>(
+        context,
+        PortfolioPage(
+          // A bare SAP ID is shown as the matching student email.
+          email: id.contains('@') ? id : '$id@$_studentDomain',
+        ),
       ),
-    ));
+    );
   }
 
   @override
@@ -395,25 +430,34 @@ class _LoginPageState extends State<LoginPage> {
                         color: _primary,
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(Icons.school_rounded,
-                          color: Colors.white, size: 25),
+                      child: const Icon(
+                        Icons.school_rounded,
+                        color: Colors.white,
+                        size: 25,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Riphah',
-                              style: TextStyle(
-                                  color: _primary,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700)),
-                          Text('STUDENT PORTFOLIO',
-                              style: TextStyle(
-                                  color: _muted,
-                                  fontSize: 9,
-                                  letterSpacing: 1.8,
-                                  fontWeight: FontWeight.w600)),
+                          Text(
+                            'Riphah',
+                            style: TextStyle(
+                              color: _primary,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'STUDENT PORTFOLIO',
+                            style: TextStyle(
+                              color: _muted,
+                              fontSize: 9,
+                              letterSpacing: 1.8,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -426,12 +470,20 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20),
                 const Row(
                   children: [
-                    Icon(Icons.account_balance_outlined, color: _muted, size: 20),
+                    Icon(
+                      Icons.account_balance_outlined,
+                      color: _muted,
+                      size: 20,
+                    ),
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Riphah International University\nI-14 Campus, Islamabad',
-                        style: TextStyle(color: _muted, fontSize: 12, height: 1.6),
+                        style: TextStyle(
+                          color: _muted,
+                          fontSize: 12,
+                          height: 1.6,
+                        ),
                       ),
                     ),
                   ],
@@ -444,23 +496,29 @@ class _LoginPageState extends State<LoginPage> {
     ),
   );
 
-  InputDecoration _loginDecoration(String label, IconData icon,
-          {String? hintText, Widget? suffixIcon}) =>
-      InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: _muted, fontSize: 14),
-        hintText: hintText,
-        hintStyle: const TextStyle(color: _muted, fontSize: 13),
-        floatingLabelStyle: const TextStyle(
-            color: _accent, fontSize: 13, fontWeight: FontWeight.w600),
-        filled: true,
-        fillColor: Colors.white,
-        prefixIcon: Icon(icon, color: _accent, size: 21),
-        suffixIcon: suffixIcon,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),
-        enabledBorder: _fieldBorder(_line),
-        focusedBorder: _fieldBorder(_accent, 1.5),
-      );
+  InputDecoration _loginDecoration(
+    String label,
+    IconData icon, {
+    String? hintText,
+    Widget? suffixIcon,
+  }) => InputDecoration(
+    labelText: label,
+    labelStyle: const TextStyle(color: _muted, fontSize: 14),
+    hintText: hintText,
+    hintStyle: const TextStyle(color: _muted, fontSize: 13),
+    floatingLabelStyle: const TextStyle(
+      color: _accent,
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+    ),
+    filled: true,
+    fillColor: Colors.white,
+    prefixIcon: Icon(icon, color: _accent, size: 21),
+    suffixIcon: suffixIcon,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),
+    enabledBorder: _fieldBorder(_line),
+    focusedBorder: _fieldBorder(_accent, 1.5),
+  );
 
   Widget _buildForm() => Form(
     key: _form,
@@ -472,12 +530,15 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               Icon(Icons.circle, size: 7, color: _accent),
               SizedBox(width: 8),
-              Text('STUDENT LOGIN',
-                  style: TextStyle(
-                      color: _accent,
-                      fontSize: 10,
-                      letterSpacing: 1.8,
-                      fontWeight: FontWeight.w700)),
+              Text(
+                'STUDENT LOGIN',
+                style: TextStyle(
+                  color: _accent,
+                  fontSize: 10,
+                  letterSpacing: 1.8,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -486,11 +547,12 @@ class _LoginPageState extends State<LoginPage> {
             child: const Text(
               'Your portfolio,\nall in one place.',
               style: TextStyle(
-                  fontSize: 34,
-                  height: 1.15,
-                  letterSpacing: -1,
-                  fontWeight: FontWeight.w700,
-                  color: _ink),
+                fontSize: 34,
+                height: 1.15,
+                letterSpacing: -1,
+                fontWeight: FontWeight.w700,
+                color: _ink,
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -508,8 +570,11 @@ class _LoginPageState extends State<LoginPage> {
             autofillHints: const [AutofillHints.username],
             autocorrect: false,
             enableSuggestions: false,
-            decoration: _loginDecoration('Email or SAP ID', Icons.person_outline,
-                hintText: 'Your university email or SAP ID'),
+            decoration: _loginDecoration(
+              'Email or SAP ID',
+              Icons.person_outline,
+              hintText: 'Your university email or SAP ID',
+            ),
             validator: _validateId,
           ),
           const SizedBox(height: 18),
@@ -551,12 +616,15 @@ class _LoginPageState extends State<LoginPage> {
               foregroundColor: Colors.white,
               minimumSize: const Size(64, 54),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13)),
+                borderRadius: BorderRadius.circular(13),
+              ),
             ),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Open my portfolio'),
+                Flexible(
+                  child: Text('Open my portfolio', textAlign: TextAlign.center),
+                ),
                 SizedBox(width: 8),
                 Icon(Icons.arrow_forward_rounded, size: 19),
               ],
@@ -594,9 +662,8 @@ class PortfolioPage extends StatelessWidget {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    Navigator.of(context).pushReplacement(MaterialPageRoute<void>(
-      builder: (_) => const LoginPage(),
-    ));
+    Navigator.of(context)
+        .pushReplacement(_fadeRoute<void>(context, const LoginPage()));
   }
 
   @override
@@ -608,8 +675,10 @@ class PortfolioPage extends StatelessWidget {
       scrolledUnderElevation: 0,
       systemOverlayStyle: SystemUiOverlayStyle.dark,
       automaticallyImplyLeading: false,
-      title: const Text('My Portfolio',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+      title: const Text(
+        'My Portfolio',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+      ),
       actions: [
         IconButton(
           tooltip: 'Sign out',
@@ -636,18 +705,13 @@ class PortfolioPage extends StatelessWidget {
             children: [
               _ProfileCard(email: email),
               const SizedBox(height: 14),
-              const _Section(
-                title: 'About me',
-                child: Text(_intro,
-                    style:
-                    TextStyle(color: _muted, fontSize: 14.5, height: 1.6)),
-              ),
+              const _AboutMeSection(),
               const SizedBox(height: 14),
               const _Section(title: 'Skills', child: _SkillsList()),
               const SizedBox(height: 14),
               const _Projects(),
               const SizedBox(height: 14),
-              const _ContactSection(),
+              _PersonalInformationSection(email: email),
               const SizedBox(height: 12),
               const SafeArea(top: false, child: _Footer()),
             ],
@@ -661,75 +725,129 @@ class PortfolioPage extends StatelessWidget {
 // ----------------------------------------------------
 // PROFILE CARD
 // ----------------------------------------------------
-class _ProfileCard extends StatelessWidget {
+class _ProfileCard extends StatefulWidget {
   final String email;
   const _ProfileCard({required this.email});
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xff5636a6), Color(0xff8463d7)],
-      ),
-      borderRadius: BorderRadius.circular(24),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x266545c1),
-          blurRadius: 20,
-          offset: Offset(0, 8),
-        ),
-      ],
-    ),
-    child: Column(
-      children: [
-        const _Avatar(),
-        const SizedBox(height: 14),
-        const Text(
-          _name,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          _degree,
-          textAlign: TextAlign.center,
-          style: TextStyle(color: _onPrimary, fontSize: 14, height: 1.4),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.mail_outline_rounded, size: 16, color: _onPrimary),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                email,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-              ),
+  State<_ProfileCard> createState() => _ProfileCardState();
+}
+
+class _ProfileCardState extends State<_ProfileCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    toggled: _expanded,
+    label: _expanded ? 'Collapse profile header' : 'Expand profile header',
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() => _expanded = !_expanded),
+        borderRadius: BorderRadius.circular(24),
+        child: AnimatedContainer(
+          key: const ValueKey('profile-header'),
+          duration: _motionDuration(context),
+          curve: Curves.easeInOutCubic,
+          padding: _expanded
+              ? const EdgeInsets.fromLTRB(24, 32, 24, 30)
+              : const EdgeInsets.fromLTRB(20, 24, 20, 22),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: _expanded
+                  ? const [Color(0xff432480), Color(0xff6c4cbd)]
+                  : const [Color(0xff5636a6), Color(0xff8463d7)],
             ),
-          ],
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x266545c1),
+                blurRadius: 20,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _Avatar(size: _expanded ? 150 : 110),
+              const SizedBox(height: 14),
+              const Text(
+                _name,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                _degree,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: _onPrimary, fontSize: 14, height: 1.4),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.mail_outline_rounded,
+                    size: 16,
+                    color: _onPrimary,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      widget.email,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _expanded ? 'Tap to collapse' : 'Tap to expand',
+                    style: const TextStyle(color: _onPrimary, fontSize: 11),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    _expanded ? Icons.expand_less : Icons.expand_more,
+                    color: _onPrimary,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     ),
   );
 }
 
 class _Avatar extends StatelessWidget {
-  static const size = 110.0;
-  const _Avatar();
+  final double size;
+  const _Avatar({required this.size});
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => AnimatedContainer(
+    key: const ValueKey('profile-avatar'),
+    duration: _motionDuration(context),
+    curve: Curves.easeInOutCubic,
     width: size,
     height: size,
     padding: const EdgeInsets.all(3),
-    decoration:
-    const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+    decoration: const BoxDecoration(
+      color: Colors.white,
+      shape: BoxShape.circle,
+    ),
     child: ClipOval(
       child: Image.asset(
         _photo,
@@ -738,11 +856,14 @@ class _Avatar extends StatelessWidget {
         errorBuilder: (context, error, stackTrace) => const ColoredBox(
           color: _accent,
           child: Center(
-            child: Text('SA',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w600)),
+            child: Text(
+              'SA',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 34,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ),
       ),
@@ -753,29 +874,92 @@ class _Avatar extends StatelessWidget {
 // ----------------------------------------------------
 // PORTFOLIO SECTIONS
 // ----------------------------------------------------
+class _AboutMeSection extends StatefulWidget {
+  const _AboutMeSection();
+
+  @override
+  State<_AboutMeSection> createState() => _AboutMeSectionState();
+}
+
+class _AboutMeSectionState extends State<_AboutMeSection> {
+  bool _expanded = false;
+  static const _style = TextStyle(color: _muted, fontSize: 14.5, height: 1.6);
+
+  @override
+  Widget build(BuildContext context) => _Section(
+    title: 'About me',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (MediaQuery.disableAnimationsOf(context))
+          Text(
+            _intro,
+            maxLines: _expanded ? null : 2,
+            overflow: _expanded ? TextOverflow.clip : TextOverflow.ellipsis,
+            style: _style,
+          )
+        else
+          AnimatedCrossFade(
+            key: const ValueKey('about-me-cross-fade'),
+            firstChild: const Text(
+              _intro,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: _style,
+            ),
+            secondChild: const Text(_intro, style: _style),
+            crossFadeState: _expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: _motionDuration(context),
+            firstCurve: Curves.easeInOut,
+            secondCurve: Curves.easeInOut,
+            sizeCurve: Curves.easeInOutCubic,
+            alignment: Alignment.topLeft,
+          ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () => setState(() => _expanded = !_expanded),
+            style: TextButton.styleFrom(padding: EdgeInsets.zero),
+            icon: Icon(
+              _expanded ? Icons.expand_less : Icons.expand_more,
+              size: 19,
+            ),
+            label: Text(_expanded ? 'Show Less' : 'Read More'),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 class _SkillsList extends StatelessWidget {
   const _SkillsList();
 
   @override
-  Widget build(BuildContext context) =>
-      Wrap(spacing: 8, runSpacing: 8, children: [
-        for (final skill in _skills)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            decoration: BoxDecoration(
-              color: _accentTint,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              skill,
-              style: const TextStyle(
-                fontSize: 12.5,
-                color: _accent,
-                fontWeight: FontWeight.w600,
-              ),
+  Widget build(BuildContext context) => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      for (final skill in _skills)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: _accentTint,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            skill,
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: _accent,
+              fontWeight: FontWeight.w600,
             ),
           ),
-      ]);
+        ),
+    ],
+  );
 }
 
 class _Projects extends StatelessWidget {
@@ -787,7 +971,7 @@ class _Projects extends StatelessWidget {
     child: Column(
       children: [
         for (final (index, (icon, title, description))
-        in _projects.indexed) ...[
+            in _projects.indexed) ...[
           if (index > 0) const Divider(height: 28, color: _line),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -834,24 +1018,56 @@ class _Projects extends StatelessWidget {
   );
 }
 
-class _ContactSection extends StatelessWidget {
-  const _ContactSection();
+class _PersonalInformationSection extends StatefulWidget {
+  final String email;
+  const _PersonalInformationSection({required this.email});
 
   @override
-  Widget build(BuildContext context) => const _Section(
-    title: 'Contact',
-    child: Column(
-      children: [
-        _ContactTile(Icons.location_on_outlined, 'Campus', _campus),
-        Divider(height: 1, color: _line),
-        _ContactTile(Icons.phone_outlined, 'Phone', _phone),
-        Divider(height: 1, color: _line),
-        _ContactTile(
-          Icons.language_rounded,
-          'University website',
-          'www.riphah.edu.pk',
+  State<_PersonalInformationSection> createState() =>
+      _PersonalInformationSectionState();
+}
+
+class _PersonalInformationSectionState
+    extends State<_PersonalInformationSection> {
+  bool _dimmed = false;
+
+  @override
+  Widget build(BuildContext context) => _Section(
+    title: 'Personal information',
+    action: TextButton.icon(
+      onPressed: () => setState(() => _dimmed = !_dimmed),
+      icon: Icon(
+        _dimmed ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+        size: 18,
+      ),
+      label: Text(_dimmed ? 'Show' : 'Dim'),
+    ),
+    child: AnimatedOpacity(
+      key: const ValueKey('personal-information-details'),
+      opacity: _dimmed ? 0.25 : 1,
+      duration: _motionDuration(context),
+      curve: Curves.easeInOut,
+      child: IgnorePointer(
+        ignoring: _dimmed,
+        child: ExcludeSemantics(
+          excluding: _dimmed,
+          child: Column(
+            children: [
+              _ContactTile(Icons.mail_outline_rounded, 'Email', widget.email),
+              const Divider(height: 1, color: _line),
+              const _ContactTile(Icons.location_on_outlined, 'Campus', _campus),
+              const Divider(height: 1, color: _line),
+              const _ContactTile(Icons.phone_outlined, 'Phone', _phone),
+              const Divider(height: 1, color: _line),
+              const _ContactTile(
+                Icons.language_rounded,
+                'University website',
+                'www.riphah.edu.pk',
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     ),
   );
 }
@@ -888,8 +1104,10 @@ class _ContactTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: const TextStyle(color: _muted, fontSize: 12)),
+                Text(
+                  label,
+                  style: const TextStyle(color: _muted, fontSize: 12),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   value,
