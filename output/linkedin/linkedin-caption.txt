@@ -1,0 +1,16 @@
+Sharing my latest Flutter project: a Student Portfolio App!
+
+As a Software Engineering student at Riphah International University, I'm building my mobile development skills through practical projects.
+
+This app brings together:
+- A simple sign-in interface with form validation
+- A personal profile and introduction
+- Skills and project showcases
+- Contact details with copy-to-clipboard actions
+- A consistent purple and lavender theme
+
+Built with Flutter, Dart and Material 3. Working on this helped me practise reusable widgets, navigation, responsive layouts and UI consistency.
+
+I'd love your feedback: what would you improve or add next?
+
+#Flutter #Dart #MobileAppDevelopment #UIUX #StudentDeveloper
