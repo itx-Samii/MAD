@@ -1,23 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:untitled1/main.dart';
+import 'package:untitled1/screens/projects_page.dart';
 
-Future<void> _submitLogin(WidgetTester tester) async {
-  final button = find.widgetWithText(FilledButton, 'Open my portfolio');
-  await tester.ensureVisible(button);
-  await tester.tap(button);
+const _emailKey = ValueKey('login-email');
+const _passwordKey = ValueKey('login-password');
+const _submitKey = ValueKey('login-submit');
+const _genericError = "We couldn't sign you in. Check your email and password.";
+
+EditableText _passwordInput(WidgetTester tester) => tester.widget<EditableText>(
+  find.descendant(
+    of: find.byKey(_passwordKey),
+    matching: find.byType(EditableText),
+  ),
+);
+
+Future<void> _enterCredentials(
+  WidgetTester tester, {
+  String email = '66157@students.riphah.edu.pk',
+  String password = '1234',
+}) async {
+  await tester.enterText(find.byKey(_emailKey), email);
+  await tester.enterText(find.byKey(_passwordKey), password);
+}
+
+Future<void> _submit(WidgetTester tester) async {
+  await tester.ensureVisible(find.byKey(_submitKey));
+  await tester.tap(find.byKey(_submitKey));
   await tester.pumpAndSettle();
 }
 
-Future<void> _openPortfolio(WidgetTester tester, {double width = 390}) async {
+Future<void> _openPortal(
+  WidgetTester tester, {
+  double width = 390,
+  double height = 844,
+  String email = '66157@students.riphah.edu.pk',
+}) async {
   tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = Size(width, 844);
+  tester.view.physicalSize = Size(width, height);
   addTearDown(tester.view.resetDevicePixelRatio);
   addTearDown(tester.view.resetPhysicalSize);
   await tester.pumpWidget(const MyApp());
-  await tester.enterText(find.byType(TextFormField).first, '66157');
-  await tester.enterText(find.byType(TextFormField).last, 'demo');
-  await _submitLogin(tester);
+  await _enterCredentials(tester, email: email);
+  await _submit(tester);
 }
 
 double _detailsOpacity(WidgetTester tester) => tester
@@ -42,160 +67,263 @@ double _routeOpacity(WidgetTester tester, Type pageType) => tester
     .opacity
     .value;
 
+String _photoAsset(WidgetTester tester) =>
+    (tester.widget<Image>(find.byKey(const ValueKey('profile-photo'))).image
+            as AssetImage)
+        .assetName;
+
 void main() {
-  testWidgets('Invalid credentials keep the user on the login screen', (
+  testWidgets('Empty and malformed input shows inline guidance', (
     tester,
   ) async {
     await tester.pumpWidget(const MyApp());
+    await _submit(tester);
+    expect(find.text('Enter your university email.'), findsOneWidget);
+    expect(find.text('Enter your password.'), findsOneWidget);
 
-    await _submitLogin(tester);
-    expect(find.text('Enter your student email or SAP ID.'), findsOneWidget);
-    expect(
-      find.text('Password must be at least 4 characters.'),
-      findsOneWidget,
+    await _enterCredentials(tester, email: 'invalid-email');
+    await _submit(tester);
+    expect(find.text('Enter a valid email address.'), findsOneWidget);
+    expect(find.byType(StudentProfilePage), findsNothing);
+    expect(find.byKey(const ValueKey('login-spinner')), findsNothing);
+  });
+
+  testWidgets('Unknown account and wrong password share a generic error', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await _enterCredentials(
+      tester,
+      email: 'unknown@students.riphah.edu.pk',
+      password: 'wrong',
     );
-
-    await tester.enterText(find.byType(TextFormField).first, 'invalid-email');
-    await tester.enterText(find.byType(TextFormField).last, '123');
-    await _submitLogin(tester);
-
-    expect(
-      find.text('Enter a valid student email or numeric SAP ID.'),
-      findsOneWidget,
-    );
+    await _submit(tester);
+    expect(find.text(_genericError), findsOneWidget);
     expect(find.byType(LoginPage), findsOneWidget);
-    expect(find.byType(PortfolioPage), findsNothing);
+    expect(find.byType(StudentProfilePage), findsNothing);
+
+    await _enterCredentials(tester, password: 'wrong');
+    expect(find.text(_genericError), findsNothing);
+    await _submit(tester);
+    expect(find.text(_genericError), findsOneWidget);
+    expect(find.byType(StudentProfilePage), findsNothing);
+    final error = tester.widget<Text>(
+      find.descendant(
+        of: find.byKey(const ValueKey('login-error')),
+        matching: find.byType(Text),
+      ),
+    );
+    expect(error.data, isNot(contains('1234')));
+    expect(error.data, isNot(contains('66157')));
+  });
+
+  testWidgets('66157 signs in as Zain with img.png and complete profile', (
+    tester,
+  ) async {
+    await _openPortal(tester);
+    expect(find.byType(StudentProfilePage), findsOneWidget);
+    expect(find.text('Muhammad Zain Khan'), findsOneWidget);
+    expect(_photoAsset(tester), 'image/img.png');
+    expect(find.text('Role: Student'), findsOneWidget);
+    expect(find.text('66157'), findsOneWidget);
+    expect(find.text('66157@students.riphah.edu.pk'), findsOneWidget);
+    expect(find.text('Riphah International University, I-14'), findsOneWidget);
+    expect(find.text('BS Software Engineering'), findsOneWidget);
+    expect(find.text('Not specified'), findsOneWidget);
+    expect(find.text('Sameer Abdullah'), findsNothing);
+    expect(find.text('About me'), findsOneWidget);
+    expect(
+      tester.getBottomRight(find.text('Not specified')).dy,
+      lessThanOrEqualTo(844),
+    );
+    expect(
+      tester.getBottomRight(find.text('Read more')).dy,
+      lessThanOrEqualTo(844),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('64860 has Sameer own photo and details', (tester) async {
+    await _openPortal(tester, email: '64860@students.riphah.edu.pk');
+    expect(find.text('Sameer Abdullah'), findsOneWidget);
+    expect(find.text('64860@students.riphah.edu.pk'), findsOneWidget);
+    expect(find.text('64860'), findsOneWidget);
+    expect(_photoAsset(tester), 'image/profile.jpg');
+    expect(find.text('Muhammad Zain Khan'), findsNothing);
+    expect(find.text('66157@students.riphah.edu.pk'), findsNothing);
+  });
+
+  testWidgets('Password toggle, Next and Done work with guarded loading', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await _enterCredentials(tester);
+    expect(_passwordInput(tester).obscureText, isTrue);
+    await tester.ensureVisible(find.byTooltip('Show password'));
+    await tester.tap(find.byTooltip('Show password'));
+    await tester.pump();
+    expect(_passwordInput(tester).obscureText, isFalse);
+    await tester.tap(find.byTooltip('Hide password'));
+    await tester.pump();
+
+    await tester.showKeyboard(find.byKey(_emailKey));
+    await tester.testTextInput.receiveAction(TextInputAction.next);
+    await tester.pump();
+    final passwordInput = tester.widget<EditableText>(
+      find.descendant(
+        of: find.byKey(_passwordKey),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(passwordInput.focusNode.hasFocus, isTrue);
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    expect(find.byKey(const ValueKey('login-spinner')), findsOneWidget);
+    expect(
+      tester.widget<FilledButton>(find.byKey(_submitKey)).onPressed,
+      isNull,
+    );
+    expect(
+      tester.widget<TextFormField>(find.byKey(_emailKey)).enabled,
+      isFalse,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(StudentProfilePage), findsOneWidget);
+    expect(find.byKey(const ValueKey('login-spinner')), findsNothing);
   });
 
   testWidgets(
-    'SAP ID login opens the portfolio and sign-out returns to login',
+    'Login and logout fade, cancellation and account switching work',
     (tester) async {
       await tester.pumpWidget(const MyApp());
-      await tester.enterText(find.byType(TextFormField).first, '66157');
-      await tester.enterText(find.byType(TextFormField).last, 'demo');
-      final button = find.widgetWithText(FilledButton, 'Open my portfolio');
-      await tester.ensureVisible(button);
-      await tester.tap(button);
+      await _enterCredentials(tester, email: ' 66157@STUDENTS.RIPHAH.EDU.PK ');
+      await tester.ensureVisible(find.byKey(_submitKey));
+      await tester.tap(find.byKey(_submitKey));
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 450));
       await tester.pump(const Duration(milliseconds: 180));
-      expect(_routeOpacity(tester, PortfolioPage), inExclusiveRange(0, 1));
+      expect(_routeOpacity(tester, StudentProfilePage), inExclusiveRange(0, 1));
       await tester.pumpAndSettle();
 
-      expect(find.byType(PortfolioPage), findsOneWidget);
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('profile-header')),
-          matching: find.text('66157@students.riphah.edu.pk'),
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('Fee Management System'), findsOneWidget);
-      expect(find.text('Attendance Management System'), findsOneWidget);
-      expect(find.text('Inventory Management System'), findsOneWidget);
-
-      await tester.tap(find.byTooltip('Sign out'));
+      await tester.tap(find.byTooltip('Logout'));
       await tester.pumpAndSettle();
-      expect(find.byType(AlertDialog), findsOneWidget);
-      await tester.tap(find.widgetWithText(TextButton, 'Sign out'));
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.text('Muhammad Zain Khan'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Logout'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Logout'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 180));
       expect(_routeOpacity(tester, LoginPage), inExclusiveRange(0, 1));
       await tester.pumpAndSettle();
+      expect(find.byType(StudentProfilePage), findsNothing);
+      expect(
+        tester.widget<TextFormField>(find.byKey(_passwordKey)).controller!.text,
+        isEmpty,
+      );
 
-      expect(find.byType(LoginPage), findsOneWidget);
-      expect(find.byType(PortfolioPage), findsNothing);
+      await _enterCredentials(tester, email: '64860@students.riphah.edu.pk');
+      await _submit(tester);
+      expect(find.text('Sameer Abdullah'), findsOneWidget);
+      expect(find.text('Muhammad Zain Khan'), findsNothing);
+      expect(_photoAsset(tester), 'image/profile.jpg');
     },
   );
 
-  testWidgets('Profile header smoothly expands and collapses on a phone', (
+  testWidgets('Photo animates between 110 and 150 pixels and restores', (
     tester,
   ) async {
-    await _openPortfolio(tester);
-    final header = find.byKey(const ValueKey('profile-header'));
+    await _openPortal(tester);
     final avatar = find.byKey(const ValueKey('profile-avatar'));
-    final collapsedHeight = tester.getSize(header).height;
+    final photoButton = find.byKey(const ValueKey('profile-photo-button'));
     expect(tester.getSize(avatar).width, 110);
-
-    await tester.tap(header);
+    await tester.tap(photoButton);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 180));
     expect(tester.getSize(avatar).width, inExclusiveRange(110, 150));
     await tester.pumpAndSettle();
     expect(tester.getSize(avatar).width, 150);
-    expect(tester.getSize(header).height, greaterThan(collapsedHeight));
-    expect(find.text('Tap to collapse'), findsOneWidget);
-
-    await tester.tap(header);
+    await tester.tap(photoButton);
     await tester.pumpAndSettle();
     expect(tester.getSize(avatar).width, 110);
-    expect(tester.getSize(header).height, collapsedHeight);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Read More expands About me and Show Less restores its height', (
+  testWidgets('Personal information hides and shows with opacity animation', (
     tester,
   ) async {
-    await _openPortfolio(tester);
-    final about = find.byKey(const ValueKey('about-me-cross-fade'));
-    final collapsedHeight = tester.getSize(about).height;
-    await tester.ensureVisible(find.text('Read More'));
-    await tester.tap(find.text('Read More'));
-    await tester.pumpAndSettle();
-    expect(find.text('Show Less'), findsOneWidget);
-    expect(tester.getSize(about).height, greaterThan(collapsedHeight));
-
-    await tester.ensureVisible(find.text('Show Less'));
-    await tester.tap(find.text('Show Less'));
-    await tester.pumpAndSettle();
-    expect(tester.getSize(about).height, collapsedHeight);
-    expect(find.text('Read More'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Personal information fades to 25 percent and restores', (
-    tester,
-  ) async {
-    await _openPortfolio(tester);
+    await _openPortal(tester);
     expect(_detailsOpacity(tester), 1);
-    final dim = find.widgetWithText(TextButton, 'Dim');
-    await tester.ensureVisible(dim);
-    await tester.tap(dim);
+    final hide = find.widgetWithText(TextButton, 'Hide');
+    await tester.ensureVisible(hide);
+    await tester.tap(hide);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 180));
-    expect(_detailsOpacity(tester), inExclusiveRange(0.25, 1));
+    expect(_detailsOpacity(tester), inExclusiveRange(0, 1));
     await tester.pumpAndSettle();
-    expect(_detailsOpacity(tester), 0.25);
-
+    expect(_detailsOpacity(tester), 0);
     await tester.tap(find.widgetWithText(TextButton, 'Show'));
     await tester.pumpAndSettle();
     expect(_detailsOpacity(tester), 1);
-    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Reduced motion works immediately on a narrow phone', (
+  testWidgets('About section expands and returns to its compact height', (
+    tester,
+  ) async {
+    await _openPortal(tester);
+    final about = find.byKey(const ValueKey('about-me-cross-fade'));
+    final initialHeight = tester.getSize(about).height;
+    await tester.ensureVisible(find.text('Read more'));
+    await tester.tap(find.text('Read more'));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(about).height, greaterThan(initialHeight));
+    await tester.ensureVisible(find.text('Show less'));
+    await tester.tap(find.text('Show less'));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(about).height, initialHeight);
+  });
+
+  testWidgets('Skills and management projects remain available from profile', (
+    tester,
+  ) async {
+    await _openPortal(tester);
+    await tester.tap(find.widgetWithText(TextButton, 'Projects'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProjectsPage), findsOneWidget);
+    expect(find.text('Fee Management System'), findsOneWidget);
+    expect(find.text('Attendance Management System'), findsOneWidget);
+    expect(find.text('Inventory Management System'), findsOneWidget);
+    expect(find.text('Flutter & Dart'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(StudentProfilePage), findsOneWidget);
+    expect(find.text('Muhammad Zain Khan'), findsOneWidget);
+  });
+
+  testWidgets('Reduced motion and a narrow screen keep all controls usable', (
     tester,
   ) async {
     tester.platformDispatcher.accessibilityFeaturesTestValue =
         const FakeAccessibilityFeatures(disableAnimations: true);
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
-    await _openPortfolio(tester, width: 320);
-    await tester.tap(find.byKey(const ValueKey('profile-header')));
+    await _openPortal(tester, width: 320, height: 640);
+    await tester.tap(find.byKey(const ValueKey('profile-photo-button')));
     await tester.pump();
     expect(
       tester.getSize(find.byKey(const ValueKey('profile-avatar'))).width,
       150,
     );
-
-    await tester.ensureVisible(find.text('Read More'));
-    await tester.tap(find.text('Read More'));
+    await tester.ensureVisible(find.text('Read more'));
+    await tester.tap(find.text('Read more'));
     await tester.pumpAndSettle();
-    expect(find.text('Show Less'), findsOneWidget);
-
-    final dim = find.widgetWithText(TextButton, 'Dim');
-    await tester.ensureVisible(dim);
-    await tester.tap(dim);
+    expect(find.text('Show less'), findsOneWidget);
+    final hide = find.widgetWithText(TextButton, 'Hide');
+    await tester.ensureVisible(hide);
+    await tester.tap(hide);
     await tester.pump();
-    expect(_detailsOpacity(tester), 0.25);
+    expect(_detailsOpacity(tester), 0);
     expect(tester.takeException(), isNull);
   });
 }

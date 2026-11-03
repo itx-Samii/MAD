@@ -1,5 +1,5 @@
 name: untitled1
-description: "A Flutter student portfolio with profile, skills, projects, and a purple Material 3 theme."
+description: "A Flutter Student Portal with demo student accounts, compact profiles, and a shared Material 3 theme."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -53,6 +53,7 @@ flutter:
 
   assets:
     - image/profile.jpg
+    - image/img.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
