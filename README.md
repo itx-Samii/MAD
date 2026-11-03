@@ -21,7 +21,7 @@ These hard-coded accounts are for a local teaching demonstration. They are not c
 - Inline validation, password visibility, keyboard Next → Done flow and a guarded loading spinner.
 - Separate profile data and photographs for both students, plus logout confirmation.
 - Role, SAP ID, email, university, program, semester and phone in Personal information; tap a detail to copy it.
-- Semester is **Not specified** until the actual value is supplied.
+- Both students are in the **5th semester**.
 - Portfolio entries for Fee, Attendance and Inventory Management Systems. These are showcase entries, rather than functional management modules.
 - A shared theme for colors, cards, inputs, buttons and dialogs.
 - A phone-frame preview on larger Chrome windows.

@@ -19,7 +19,7 @@ class Student {
     this.role = 'Student',
     this.university = 'Riphah International University, I-14',
     this.program = 'BS Software Engineering',
-    this.semester = 'Not specified',
+    this.semester = '5th',
     this.phone = '0349 5999656',
   });
 }

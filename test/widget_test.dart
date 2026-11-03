@@ -139,7 +139,7 @@ void main() {
       findsOneWidget,
     );
     expect(_personalDetail('BS Software Engineering'), findsOneWidget);
-    expect(_personalDetail('Not specified'), findsOneWidget);
+    expect(_personalDetail('5th'), findsOneWidget);
     expect(find.text('Sameer Abdullah'), findsNothing);
     expect(find.text('About me'), findsOneWidget);
     expect(find.text('My Portfolio'), findsOneWidget);
