@@ -8,7 +8,10 @@ abstract final class PortalColors {
   static const line = Color(0xffe3ddef);
   static const tint = Color(0xfff0eafa);
   static const gradientStart = Color(0xff5636a6);
-  static const gradientEnd = Color(0xff8768d8);
+  static const gradientEnd = Color(0xff8463d7);
+  static const expandedStart = Color(0xff432480);
+  static const expandedEnd = Color(0xff6c4cbd);
+  static const cardShadow = Color(0x266545c1);
   static const onPrimary = Color(0xffeee7ff);
   static const error = Color(0xffb3261e);
   static const previewBackground = Color(0xffeeebf5);
@@ -20,7 +23,7 @@ abstract final class PortalTheme {
   static BoxDecoration cardDecoration({bool highlighted = false}) =>
       BoxDecoration(
         color: highlighted ? PortalColors.tint : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: PortalColors.line),
       );
 
@@ -28,7 +31,7 @@ abstract final class PortalTheme {
     Color color = PortalColors.line,
     double width = 1,
   ]) => OutlineInputBorder(
-    borderRadius: BorderRadius.circular(12),
+    borderRadius: BorderRadius.circular(10),
     borderSide: BorderSide(color: color, width: width),
   );
 
@@ -52,8 +55,8 @@ abstract final class PortalTheme {
       surfaceTintColor: Colors.transparent,
       scrolledUnderElevation: 0,
       titleTextStyle: TextStyle(
-        color: PortalColors.ink,
-        fontSize: 17,
+        color: PortalColors.primary,
+        fontSize: 18,
         fontWeight: FontWeight.w700,
       ),
     ),
@@ -62,7 +65,7 @@ abstract final class PortalTheme {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         side: const BorderSide(color: PortalColors.line),
       ),
     ),
@@ -88,7 +91,7 @@ abstract final class PortalTheme {
         disabledBackgroundColor: PortalColors.primary,
         disabledForegroundColor: Colors.white,
         textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
       ),
     ),
     textButtonTheme: TextButtonThemeData(

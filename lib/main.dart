@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'Riphah Student Portal',
+    title: 'Riphah Student Portfolio',
     debugShowCheckedModeBanner: false,
     theme: PortalTheme.data,
     builder: (context, child) =>

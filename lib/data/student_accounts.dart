@@ -32,7 +32,10 @@ class DemoStudentAccounts {
   static Future<Student?> signIn(String email, String password) async {
     // A brief local delay lets the UI communicate that sign-in is in progress.
     await Future<void>.delayed(const Duration(milliseconds: 450));
-    final normalizedEmail = email.trim().toLowerCase();
+    final id = email.trim().toLowerCase();
+    final normalizedEmail = RegExp(r'^\d+$').hasMatch(id)
+        ? '$id@students.riphah.edu.pk'
+        : id;
     for (final account in _accounts) {
       if (account.student.email == normalizedEmail &&
           account.password == password) {

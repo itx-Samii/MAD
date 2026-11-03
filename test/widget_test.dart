@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:untitled1/main.dart';
-import 'package:untitled1/screens/projects_page.dart';
 
 const _emailKey = ValueKey('login-email');
 const _passwordKey = ValueKey('login-password');
@@ -72,18 +71,26 @@ String _photoAsset(WidgetTester tester) =>
             as AssetImage)
         .assetName;
 
+Finder _personalDetail(String value) => find.descendant(
+  of: find.byKey(const ValueKey('personal-information-details')),
+  matching: find.text(value),
+);
+
 void main() {
   testWidgets('Empty and malformed input shows inline guidance', (
     tester,
   ) async {
     await tester.pumpWidget(const MyApp());
     await _submit(tester);
-    expect(find.text('Enter your university email.'), findsOneWidget);
+    expect(find.text('Enter your student email or SAP ID.'), findsOneWidget);
     expect(find.text('Enter your password.'), findsOneWidget);
 
     await _enterCredentials(tester, email: 'invalid-email');
     await _submit(tester);
-    expect(find.text('Enter a valid email address.'), findsOneWidget);
+    expect(
+      find.text('Enter a valid student email or numeric SAP ID.'),
+      findsOneWidget,
+    );
     expect(find.byType(StudentProfilePage), findsNothing);
     expect(find.byKey(const ValueKey('login-spinner')), findsNothing);
   });
@@ -124,33 +131,38 @@ void main() {
     expect(find.byType(StudentProfilePage), findsOneWidget);
     expect(find.text('Muhammad Zain Khan'), findsOneWidget);
     expect(_photoAsset(tester), 'image/img.png');
-    expect(find.text('Role: Student'), findsOneWidget);
-    expect(find.text('66157'), findsOneWidget);
-    expect(find.text('66157@students.riphah.edu.pk'), findsOneWidget);
-    expect(find.text('Riphah International University, I-14'), findsOneWidget);
-    expect(find.text('BS Software Engineering'), findsOneWidget);
-    expect(find.text('Not specified'), findsOneWidget);
+    expect(_personalDetail('Student'), findsOneWidget);
+    expect(_personalDetail('66157'), findsOneWidget);
+    expect(_personalDetail('66157@students.riphah.edu.pk'), findsOneWidget);
+    expect(
+      _personalDetail('Riphah International University, I-14'),
+      findsOneWidget,
+    );
+    expect(_personalDetail('BS Software Engineering'), findsOneWidget);
+    expect(_personalDetail('Not specified'), findsOneWidget);
     expect(find.text('Sameer Abdullah'), findsNothing);
     expect(find.text('About me'), findsOneWidget);
-    expect(
-      tester.getBottomRight(find.text('Not specified')).dy,
-      lessThanOrEqualTo(844),
-    );
-    expect(
-      tester.getBottomRight(find.text('Read more')).dy,
-      lessThanOrEqualTo(844),
-    );
+    expect(find.text('My Portfolio'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('64860 has Sameer own photo and details', (tester) async {
     await _openPortal(tester, email: '64860@students.riphah.edu.pk');
     expect(find.text('Sameer Abdullah'), findsOneWidget);
-    expect(find.text('64860@students.riphah.edu.pk'), findsOneWidget);
+    expect(_personalDetail('64860@students.riphah.edu.pk'), findsOneWidget);
     expect(find.text('64860'), findsOneWidget);
     expect(_photoAsset(tester), 'image/profile.jpg');
     expect(find.text('Muhammad Zain Khan'), findsNothing);
     expect(find.text('66157@students.riphah.edu.pk'), findsNothing);
+  });
+
+  testWidgets('Numeric SAP ID opens the matching existing account', (
+    tester,
+  ) async {
+    await _openPortal(tester, email: '64860');
+    expect(find.text('Sameer Abdullah'), findsOneWidget);
+    expect(_personalDetail('64860@students.riphah.edu.pk'), findsOneWidget);
+    expect(_photoAsset(tester), 'image/profile.jpg');
   });
 
   testWidgets('Password toggle, Next and Done work with guarded loading', (
@@ -285,19 +297,22 @@ void main() {
     expect(tester.getSize(about).height, initialHeight);
   });
 
-  testWidgets('Skills and management projects remain available from profile', (
+  testWidgets('Skills and management projects appear inline in the portfolio', (
     tester,
   ) async {
     await _openPortal(tester);
-    await tester.tap(find.widgetWithText(TextButton, 'Projects'));
-    await tester.pumpAndSettle();
-    expect(find.byType(ProjectsPage), findsOneWidget);
+    expect(find.text('Skills'), findsOneWidget);
+    expect(find.text('My projects'), findsOneWidget);
     expect(find.text('Fee Management System'), findsOneWidget);
     expect(find.text('Attendance Management System'), findsOneWidget);
     expect(find.text('Inventory Management System'), findsOneWidget);
     expect(find.text('Flutter & Dart'), findsOneWidget);
-    await tester.pageBack();
+    await tester.ensureVisible(find.text('Inventory Management System'));
     await tester.pumpAndSettle();
+    expect(
+      find.text('Inventory Management System').hitTestable(),
+      findsOneWidget,
+    );
     expect(find.byType(StudentProfilePage), findsOneWidget);
     expect(find.text('Muhammad Zain Khan'), findsOneWidget);
   });

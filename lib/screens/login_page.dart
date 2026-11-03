@@ -31,10 +31,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   String? _validateEmail(String? value) {
-    final email = (value ?? '').trim();
-    if (email.isEmpty) return 'Enter your university email.';
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      return 'Enter a valid email address.';
+    final id = (value ?? '').trim();
+    if (id.isEmpty) return 'Enter your student email or SAP ID.';
+    if (!RegExp(r'^\d+$').hasMatch(id) &&
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(id)) {
+      return 'Enter a valid student email or numeric SAP ID.';
     }
     return null;
   }
@@ -68,125 +69,90 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
-    value: SystemUiOverlayStyle.light,
+    value: SystemUiOverlayStyle.dark,
     child: Scaffold(
-      body: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.fromLTRB(
-                28,
-                MediaQuery.paddingOf(context).top + 28,
-                28,
-                48,
-              ),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    PortalColors.gradientStart,
-                    PortalColors.gradientEnd,
-                  ],
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(48),
-                  bottomRight: Radius.circular(22),
-                ),
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 464),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              Icons.account_balance_rounded,
-                              color: PortalColors.primary,
-                              size: 28,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          const Expanded(
-                            child: Text(
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: PortalColors.primary,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.school_rounded,
+                          color: Colors.white,
+                          size: 25,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
                               'Riphah',
                               style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 26,
+                                color: PortalColors.primary,
+                                fontSize: 22,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 22),
-                      const Text(
-                        'Student Portal',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Your university profile, in one place.',
-                        style: TextStyle(
-                          color: PortalColors.onPrimary,
-                          fontSize: 13,
-                          height: 1.5,
+                            Text(
+                              'STUDENT PORTFOLIO',
+                              style: TextStyle(
+                                color: PortalColors.muted,
+                                fontSize: 9,
+                                letterSpacing: 1.8,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-            ),
-            Transform.translate(
-              offset: const Offset(0, -24),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 520),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 22),
-                    child: Column(
-                      children: [
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(22),
-                            child: _buildForm(),
+                  const SizedBox(height: 44),
+                  _buildForm(),
+                  const SizedBox(height: 32),
+                  const Divider(height: 1, color: PortalColors.line),
+                  const SizedBox(height: 20),
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.account_balance_outlined,
+                        color: PortalColors.muted,
+                        size: 20,
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Riphah International University\nI-14 Campus, Islamabad',
+                          style: TextStyle(
+                            color: PortalColors.muted,
+                            fontSize: 12,
+                            height: 1.6,
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        const SafeArea(
-                          top: false,
-                          child: Text(
-                            'Riphah International University · I-14 Campus',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: PortalColors.muted,
-                              fontSize: 11,
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     ),
@@ -198,20 +164,45 @@ class _LoginPageState extends State<LoginPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Welcome back',
-            style: TextStyle(
-              color: PortalColors.ink,
-              fontSize: 23,
-              fontWeight: FontWeight.w700,
+          const Row(
+            children: [
+              Icon(Icons.circle, size: 7, color: PortalColors.primary),
+              SizedBox(width: 8),
+              Text(
+                'STUDENT LOGIN',
+                style: TextStyle(
+                  color: PortalColors.primary,
+                  fontSize: 10,
+                  letterSpacing: 1.8,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Semantics(
+            header: true,
+            child: const Text(
+              'Your portfolio,\nall in one place.',
+              style: TextStyle(
+                color: PortalColors.ink,
+                fontSize: 34,
+                height: 1.15,
+                letterSpacing: -1,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 14),
           const Text(
-            'Sign in with your student account.',
-            style: TextStyle(color: PortalColors.muted, fontSize: 13),
+            'Sign in to explore your profile, skills and projects.',
+            style: TextStyle(
+              color: PortalColors.muted,
+              fontSize: 14,
+              height: 1.6,
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           TextFormField(
             key: const ValueKey('login-email'),
             controller: _email,
@@ -224,9 +215,9 @@ class _LoginPageState extends State<LoginPage> {
             enableSuggestions: false,
             onChanged: _clearError,
             decoration: const InputDecoration(
-              labelText: 'University email',
-              hintText: 'you@students.riphah.edu.pk',
-              prefixIcon: Icon(Icons.alternate_email_rounded, size: 21),
+              labelText: 'Email or SAP ID',
+              hintText: 'Your university email or SAP ID',
+              prefixIcon: Icon(Icons.person_outline, size: 21),
             ),
             validator: _validateEmail,
           ),
@@ -284,7 +275,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ],
-          const SizedBox(height: 22),
+          const SizedBox(height: 24),
           FilledButton(
             key: const ValueKey('login-submit'),
             onPressed: _loading ? null : _login,
@@ -307,7 +298,7 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                   Flexible(
                     child: Text(
-                      _loading ? 'Signing in…' : 'Login',
+                      _loading ? 'Signing in…' : 'Open my portfolio',
                       textAlign: TextAlign.center,
                     ),
                   ),
