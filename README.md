@@ -18,6 +18,7 @@ These hard-coded accounts are for a local teaching demonstration. They are not c
 - A flat lavender login screen with Riphah branding, the heading **Your portfolio, all in one place**, and an **Open my portfolio** button.
 - A centered photograph, student name, program and email on a purple gradient profile card.
 - About me, Skills, My projects and Personal information cards on the same scrollable portfolio page.
+- A fixed bottom navigation bar with **Profile, Skills, Projects and Info** shortcuts. Tapping a destination scrolls to that section, and the selected destination follows manual scrolling. Expanded photos and introductions keep their state.
 - Inline validation, password visibility, keyboard Next → Done flow and a guarded loading spinner.
 - Separate profile data and photographs for both students, plus logout confirmation.
 - Role, SAP ID, email, university, program, semester and phone in Personal information; tap a detail to copy it.

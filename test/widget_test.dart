@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:untitled1/main.dart';
+import 'package:untitled1/widgets/portfolio_sections.dart';
 
 const _emailKey = ValueKey('login-email');
 const _passwordKey = ValueKey('login-password');
@@ -75,6 +76,14 @@ Finder _personalDetail(String value) => find.descendant(
   of: find.byKey(const ValueKey('personal-information-details')),
   matching: find.text(value),
 );
+
+Future<void> _selectSection(WidgetTester tester, String section) async {
+  await tester.tap(find.byKey(ValueKey('nav-$section')));
+  await tester.pumpAndSettle();
+}
+
+int _selectedSection(WidgetTester tester) =>
+    tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex;
 
 void main() {
   testWidgets('Empty and malformed input shows inline guidance', (
@@ -301,7 +310,7 @@ void main() {
     tester,
   ) async {
     await _openPortal(tester);
-    expect(find.text('Skills'), findsOneWidget);
+    expect(find.byType(SkillsSection), findsOneWidget);
     expect(find.text('My projects'), findsOneWidget);
     expect(find.text('Fee Management System'), findsOneWidget);
     expect(find.text('Attendance Management System'), findsOneWidget);
@@ -324,6 +333,11 @@ void main() {
         const FakeAccessibilityFeatures(disableAnimations: true);
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
     await _openPortal(tester, width: 320, height: 640);
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('nav-info')).hitTestable(),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const ValueKey('profile-photo-button')));
     await tester.pump();
     expect(
@@ -341,4 +355,104 @@ void main() {
     expect(_detailsOpacity(tester), 0);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Bottom navigation reaches every section and stays fixed', (
+    tester,
+  ) async {
+    await _openPortal(tester);
+    final bar = find.byType(NavigationBar);
+    final initialRect = tester.getRect(bar);
+    expect(_selectedSection(tester), 0);
+
+    await _selectSection(tester, 'skills');
+    expect(_selectedSection(tester), 1);
+    expect(
+      find
+          .descendant(
+            of: find.byType(SkillsSection),
+            matching: find.text('Skills'),
+          )
+          .hitTestable(),
+      findsOneWidget,
+    );
+    expect(tester.getRect(bar), initialRect);
+
+    await _selectSection(tester, 'projects');
+    expect(_selectedSection(tester), 2);
+    expect(find.text('My projects').hitTestable(), findsOneWidget);
+    expect(tester.getRect(bar), initialRect);
+
+    await _selectSection(tester, 'info');
+    expect(_selectedSection(tester), 3);
+    expect(find.text('Personal information').hitTestable(), findsOneWidget);
+    expect(tester.getRect(bar), initialRect);
+
+    await _selectSection(tester, 'profile');
+    expect(_selectedSection(tester), 0);
+    expect(find.text('Muhammad Zain Khan').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Section navigation preserves animations and follows scrolling', (
+    tester,
+  ) async {
+    await _openPortal(tester);
+    await tester.tap(find.byKey(const ValueKey('profile-photo-button')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Read more'));
+    await tester.tap(find.text('Read more'));
+    await tester.pumpAndSettle();
+
+    await _selectSection(tester, 'info');
+    await _selectSection(tester, 'profile');
+    expect(
+      tester.getSize(find.byKey(const ValueKey('profile-avatar'))).width,
+      150,
+    );
+    expect(find.text('Show less'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Personal information'));
+    await tester.pumpAndSettle();
+    expect(_selectedSection(tester), 3);
+    await tester.ensureVisible(find.byKey(const ValueKey('profile-avatar')));
+    await tester.pumpAndSettle();
+    expect(_selectedSection(tester), 0);
+
+    // A new tap can replace a scroll already in progress.
+    await tester.tap(find.byKey(const ValueKey('nav-projects')));
+    await tester.pump(const Duration(milliseconds: 80));
+    await tester.tap(find.byKey(const ValueKey('nav-skills')));
+    await tester.pumpAndSettle();
+    expect(_selectedSection(tester), 1);
+    expect(
+      find
+          .descendant(
+            of: find.byType(SkillsSection),
+            matching: find.text('Skills'),
+          )
+          .hitTestable(),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'Logging out of a section resets navigation for the next student',
+    (tester) async {
+      await _openPortal(tester);
+      await _selectSection(tester, 'info');
+      await tester.tap(find.byTooltip('Logout'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Logout'));
+      await tester.pumpAndSettle();
+      expect(find.byType(NavigationBar), findsNothing);
+
+      await _enterCredentials(tester, email: '64860@students.riphah.edu.pk');
+      await _submit(tester);
+      expect(_selectedSection(tester), 0);
+      expect(find.text('Sameer Abdullah').hitTestable(), findsOneWidget);
+      expect(find.text('Muhammad Zain Khan'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

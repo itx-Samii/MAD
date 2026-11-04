@@ -103,6 +103,33 @@ abstract final class PortalTheme {
     iconButtonTheme: IconButtonThemeData(
       style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
     ),
+    navigationBarTheme: NavigationBarThemeData(
+      height: 76,
+      elevation: 0,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      indicatorColor: PortalColors.tint,
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(
+          color: states.contains(WidgetState.selected)
+              ? PortalColors.primary
+              : PortalColors.muted,
+          fontSize: 12,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.w700
+              : FontWeight.w500,
+        ),
+      ),
+      iconTheme: WidgetStateProperty.resolveWith(
+        (states) => IconThemeData(
+          color: states.contains(WidgetState.selected)
+              ? PortalColors.primary
+              : PortalColors.muted,
+          size: 24,
+        ),
+      ),
+    ),
     dialogTheme: DialogThemeData(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,

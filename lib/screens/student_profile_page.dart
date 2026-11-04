@@ -7,9 +7,80 @@ import '../theme/app_theme.dart';
 import '../widgets/portfolio_sections.dart';
 import 'login_page.dart';
 
-class StudentProfilePage extends StatelessWidget {
+class StudentProfilePage extends StatefulWidget {
   final Student student;
   const StudentProfilePage({super.key, required this.student});
+
+  @override
+  State<StudentProfilePage> createState() => _StudentProfilePageState();
+}
+
+class _StudentProfilePageState extends State<StudentProfilePage> {
+  final _scrollController = ScrollController();
+  final _bodyKey = GlobalKey();
+  final _sectionKeys = List.generate(4, (_) => GlobalKey());
+  int _selectedSection = 0;
+  int _navigationRequest = 0;
+  bool _scrollingToSection = false;
+  bool _scrollUpdateScheduled = false;
+
+  Student get student => widget.student;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_handleScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_handleScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _goToSection(int index) async {
+    final target = _sectionKeys[index].currentContext;
+    if (target == null) return;
+    final request = ++_navigationRequest;
+    _scrollingToSection = true;
+    setState(() => _selectedSection = index);
+    await Scrollable.ensureVisible(
+      target,
+      duration: motionDuration(context),
+      curve: Curves.easeInOutCubic,
+      alignment: 0,
+    );
+    if (!mounted || request != _navigationRequest) return;
+    _scrollingToSection = false;
+  }
+
+  void _handleScroll() {
+    if (_scrollingToSection || _scrollUpdateScheduled) return;
+    _scrollUpdateScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollUpdateScheduled = false;
+      if (!mounted || _scrollingToSection || !_scrollController.hasClients) {
+        return;
+      }
+      final viewport = _bodyKey.currentContext?.findRenderObject();
+      if (viewport is! RenderBox || !viewport.hasSize) return;
+      var selected = 0;
+      for (var index = 0; index < _sectionKeys.length; index++) {
+        final section = _sectionKeys[index].currentContext?.findRenderObject();
+        if (section is RenderBox &&
+            section.hasSize &&
+            section.localToGlobal(Offset.zero, ancestor: viewport).dy <= 24) {
+          selected = index;
+        }
+      }
+      final position = _scrollController.position;
+      if (position.pixels > 0 && position.extentAfter <= 1) selected = 3;
+      if (selected != _selectedSection) {
+        setState(() => _selectedSection = selected);
+      }
+    });
+  }
 
   Future<void> _logout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -60,23 +131,31 @@ class StudentProfilePage extends StatelessWidget {
       ),
     ),
     body: Align(
+      key: _bodyKey,
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
         child: SingleChildScrollView(
+          controller: _scrollController,
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _ProfileHeader(student: student),
+              SizedBox(
+                key: _sectionKeys[0],
+                child: _ProfileHeader(student: student),
+              ),
               const SizedBox(height: 14),
               _AboutSection(student: student),
               const SizedBox(height: 14),
-              const SkillsSection(),
+              SizedBox(key: _sectionKeys[1], child: const SkillsSection()),
               const SizedBox(height: 14),
-              const ProjectsSection(),
+              SizedBox(key: _sectionKeys[2], child: const ProjectsSection()),
               const SizedBox(height: 14),
-              _PersonalInformation(student: student),
+              SizedBox(
+                key: _sectionKeys[3],
+                child: _PersonalInformation(student: student),
+              ),
               const SizedBox(height: 12),
               SafeArea(
                 top: false,
@@ -95,6 +174,41 @@ class StudentProfilePage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    ),
+    bottomNavigationBar: DecoratedBox(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: PortalColors.line)),
+      ),
+      child: NavigationBar(
+        selectedIndex: _selectedSection,
+        onDestinationSelected: _goToSection,
+        destinations: const [
+          NavigationDestination(
+            key: ValueKey('nav-profile'),
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: 'Profile',
+          ),
+          NavigationDestination(
+            key: ValueKey('nav-skills'),
+            icon: Icon(Icons.school_outlined),
+            selectedIcon: Icon(Icons.school_rounded),
+            label: 'Skills',
+          ),
+          NavigationDestination(
+            key: ValueKey('nav-projects'),
+            icon: Icon(Icons.work_outline_rounded),
+            selectedIcon: Icon(Icons.work_rounded),
+            label: 'Projects',
+          ),
+          NavigationDestination(
+            key: ValueKey('nav-info'),
+            icon: Icon(Icons.info_outline_rounded),
+            selectedIcon: Icon(Icons.info_rounded),
+            label: 'Info',
+          ),
+        ],
       ),
     ),
   );
