@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,70 +17,26 @@ class StudentProfilePage extends StatefulWidget {
 }
 
 class _StudentProfilePageState extends State<StudentProfilePage> {
-  final _scrollController = ScrollController();
-  final _bodyKey = GlobalKey();
-  final _sectionKeys = List.generate(4, (_) => GlobalKey());
-  int _selectedSection = 0;
-  int _navigationRequest = 0;
-  bool _scrollingToSection = false;
-  bool _scrollUpdateScheduled = false;
-
-  Student get student => widget.student;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_handleScroll);
-  }
+  final _pageController = PageController();
+  int _selectedTab = 0;
 
   @override
   void dispose() {
-    _scrollController.removeListener(_handleScroll);
-    _scrollController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
-  Future<void> _goToSection(int index) async {
-    final target = _sectionKeys[index].currentContext;
-    if (target == null) return;
-    final request = ++_navigationRequest;
-    _scrollingToSection = true;
-    setState(() => _selectedSection = index);
-    await Scrollable.ensureVisible(
-      target,
-      duration: motionDuration(context),
-      curve: Curves.easeInOutCubic,
-      alignment: 0,
-    );
-    if (!mounted || request != _navigationRequest) return;
-    _scrollingToSection = false;
-  }
-
-  void _handleScroll() {
-    if (_scrollingToSection || _scrollUpdateScheduled) return;
-    _scrollUpdateScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollUpdateScheduled = false;
-      if (!mounted || _scrollingToSection || !_scrollController.hasClients) {
-        return;
-      }
-      final viewport = _bodyKey.currentContext?.findRenderObject();
-      if (viewport is! RenderBox || !viewport.hasSize) return;
-      var selected = 0;
-      for (var index = 0; index < _sectionKeys.length; index++) {
-        final section = _sectionKeys[index].currentContext?.findRenderObject();
-        if (section is RenderBox &&
-            section.hasSize &&
-            section.localToGlobal(Offset.zero, ancestor: viewport).dy <= 24) {
-          selected = index;
-        }
-      }
-      final position = _scrollController.position;
-      if (position.pixels > 0 && position.extentAfter <= 1) selected = 3;
-      if (selected != _selectedSection) {
-        setState(() => _selectedSection = selected);
-      }
-    });
+  void _openTab(int index) {
+    final duration = motionDuration(context);
+    if (duration == Duration.zero || (_selectedTab - index).abs() > 1) {
+      _pageController.jumpToPage(index);
+    } else {
+      _pageController.animateToPage(
+        index,
+        duration: duration,
+        curve: Curves.easeInOutCubic,
+      );
+    }
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -130,48 +87,79 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
         child: Divider(height: 1, thickness: 1, color: PortalColors.line),
       ),
     ),
-    body: Align(
-      key: _bodyKey,
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                key: _sectionKeys[0],
-                child: _ProfileHeader(student: student),
-              ),
-              const SizedBox(height: 14),
-              _AboutSection(student: student),
-              const SizedBox(height: 14),
-              SizedBox(key: _sectionKeys[1], child: const SkillsSection()),
-              const SizedBox(height: 14),
-              SizedBox(key: _sectionKeys[2], child: const ProjectsSection()),
-              const SizedBox(height: 14),
-              SizedBox(
-                key: _sectionKeys[3],
-                child: _PersonalInformation(student: student),
-              ),
-              const SizedBox(height: 12),
-              SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  child: Text(
-                    '© ${DateTime.now().year} ${student.name}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: PortalColors.muted,
-                      fontSize: 12,
+    body: SafeArea(
+      top: false,
+      bottom: false,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: LayoutBuilder(
+            builder: (context, constraints) => Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: ConstrainedBox(
+                    // Leave room to read and swipe the pages in short windows.
+                    constraints: BoxConstraints(
+                      maxHeight: constraints.maxHeight * 0.68,
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        width: (constraints.maxWidth - 32).clamp(0, 488),
+                        child: _ProfileHeader(student: widget.student),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) =>
+                        setState(() => _selectedTab = index),
+                    scrollBehavior: ScrollConfiguration.of(context).copyWith(
+                      dragDevices: {
+                        ...ScrollConfiguration.of(context).dragDevices,
+                        PointerDeviceKind.mouse,
+                      },
+                    ),
+                    children: [
+                      _PortfolioTabPage(
+                        active: _selectedTab == 0,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _AboutSection(student: widget.student),
+                            const SizedBox(height: 20),
+                            Text(
+                              '© ${DateTime.now().year} ${widget.student.name}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: PortalColors.muted,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _PortfolioTabPage(
+                        active: _selectedTab == 1,
+                        child: const SkillsSection(),
+                      ),
+                      _PortfolioTabPage(
+                        active: _selectedTab == 2,
+                        child: const ProjectsSection(),
+                      ),
+                      _PortfolioTabPage(
+                        active: _selectedTab == 3,
+                        child: _PersonalInformation(student: widget.student),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -181,8 +169,8 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
         border: Border(top: BorderSide(color: PortalColors.line)),
       ),
       child: NavigationBar(
-        selectedIndex: _selectedSection,
-        onDestinationSelected: _goToSection,
+        selectedIndex: _selectedTab,
+        onDestinationSelected: _openTab,
         destinations: const [
           NavigationDestination(
             key: ValueKey('nav-profile'),
@@ -212,6 +200,34 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
       ),
     ),
   );
+}
+
+class _PortfolioTabPage extends StatefulWidget {
+  final bool active;
+  final Widget child;
+  const _PortfolioTabPage({required this.active, required this.child});
+
+  @override
+  State<_PortfolioTabPage> createState() => _PortfolioTabPageState();
+}
+
+class _PortfolioTabPageState extends State<_PortfolioTabPage>
+    with AutomaticKeepAliveClientMixin<_PortfolioTabPage> {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return ExcludeFocus(
+      excluding: !widget.active,
+      child: SingleChildScrollView(
+        primary: false,
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+        child: SizedBox(width: double.infinity, child: widget.child),
+      ),
+    );
+  }
 }
 
 class _ProfileHeader extends StatefulWidget {

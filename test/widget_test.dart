@@ -140,6 +140,11 @@ void main() {
     expect(find.byType(StudentProfilePage), findsOneWidget);
     expect(find.text('Muhammad Zain Khan'), findsOneWidget);
     expect(_photoAsset(tester), 'image/img.png');
+    expect(find.text('Sameer Abdullah'), findsNothing);
+    expect(find.text('About me'), findsOneWidget);
+    expect(find.text('My Portfolio'), findsOneWidget);
+
+    await _selectSection(tester, 'info');
     expect(_personalDetail('Student'), findsOneWidget);
     expect(_personalDetail('66157'), findsOneWidget);
     expect(_personalDetail('66157@students.riphah.edu.pk'), findsOneWidget);
@@ -149,20 +154,19 @@ void main() {
     );
     expect(_personalDetail('BS Software Engineering'), findsOneWidget);
     expect(_personalDetail('5th'), findsOneWidget);
-    expect(find.text('Sameer Abdullah'), findsNothing);
-    expect(find.text('About me'), findsOneWidget);
-    expect(find.text('My Portfolio'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('64860 has Sameer own photo and details', (tester) async {
     await _openPortal(tester, email: '64860@students.riphah.edu.pk');
     expect(find.text('Sameer Abdullah'), findsOneWidget);
-    expect(_personalDetail('64860@students.riphah.edu.pk'), findsOneWidget);
-    expect(find.text('64860'), findsOneWidget);
     expect(_photoAsset(tester), 'image/profile.jpg');
     expect(find.text('Muhammad Zain Khan'), findsNothing);
-    expect(find.text('66157@students.riphah.edu.pk'), findsNothing);
+
+    await _selectSection(tester, 'info');
+    expect(_personalDetail('64860@students.riphah.edu.pk'), findsOneWidget);
+    expect(_personalDetail('64860'), findsOneWidget);
+    expect(_personalDetail('66157@students.riphah.edu.pk'), findsNothing);
   });
 
   testWidgets('Numeric SAP ID opens the matching existing account', (
@@ -170,8 +174,9 @@ void main() {
   ) async {
     await _openPortal(tester, email: '64860');
     expect(find.text('Sameer Abdullah'), findsOneWidget);
-    expect(_personalDetail('64860@students.riphah.edu.pk'), findsOneWidget);
     expect(_photoAsset(tester), 'image/profile.jpg');
+    await _selectSection(tester, 'info');
+    expect(_personalDetail('64860@students.riphah.edu.pk'), findsOneWidget);
   });
 
   testWidgets('Password toggle, Next and Done work with guarded loading', (
@@ -276,6 +281,7 @@ void main() {
     tester,
   ) async {
     await _openPortal(tester);
+    await _selectSection(tester, 'info');
     expect(_detailsOpacity(tester), 1);
     final hide = find.widgetWithText(TextButton, 'Hide');
     await tester.ensureVisible(hide);
@@ -306,26 +312,6 @@ void main() {
     expect(tester.getSize(about).height, initialHeight);
   });
 
-  testWidgets('Skills and management projects appear inline in the portfolio', (
-    tester,
-  ) async {
-    await _openPortal(tester);
-    expect(find.byType(SkillsSection), findsOneWidget);
-    expect(find.text('My projects'), findsOneWidget);
-    expect(find.text('Fee Management System'), findsOneWidget);
-    expect(find.text('Attendance Management System'), findsOneWidget);
-    expect(find.text('Inventory Management System'), findsOneWidget);
-    expect(find.text('Flutter & Dart'), findsOneWidget);
-    await tester.ensureVisible(find.text('Inventory Management System'));
-    await tester.pumpAndSettle();
-    expect(
-      find.text('Inventory Management System').hitTestable(),
-      findsOneWidget,
-    );
-    expect(find.byType(StudentProfilePage), findsOneWidget);
-    expect(find.text('Muhammad Zain Khan'), findsOneWidget);
-  });
-
   testWidgets('Reduced motion and a narrow screen keep all controls usable', (
     tester,
   ) async {
@@ -348,6 +334,7 @@ void main() {
     await tester.tap(find.text('Read more'));
     await tester.pumpAndSettle();
     expect(find.text('Show less'), findsOneWidget);
+    await _selectSection(tester, 'info');
     final hide = find.widgetWithText(TextButton, 'Hide');
     await tester.ensureVisible(hide);
     await tester.tap(hide);
@@ -356,36 +343,49 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Bottom navigation reaches every section and stays fixed', (
+  testWidgets('Bottom navigation switches content below the fixed profile', (
     tester,
   ) async {
     await _openPortal(tester);
     final bar = find.byType(NavigationBar);
+    final header = find.byKey(const ValueKey('profile-header'));
     final initialRect = tester.getRect(bar);
+    final headerRect = tester.getRect(header);
     expect(_selectedSection(tester), 0);
+    expect(find.text('About me'), findsOneWidget);
+    expect(find.byType(SkillsSection), findsNothing);
+    expect(find.byType(ProjectsSection), findsNothing);
+    expect(find.text('Personal information'), findsNothing);
 
     await _selectSection(tester, 'skills');
     expect(_selectedSection(tester), 1);
-    expect(
-      find
-          .descendant(
-            of: find.byType(SkillsSection),
-            matching: find.text('Skills'),
-          )
-          .hitTestable(),
-      findsOneWidget,
-    );
+    expect(find.text('Flutter & Dart').hitTestable(), findsOneWidget);
+    expect(find.text('About me'), findsNothing);
+    expect(find.byType(ProjectsSection), findsNothing);
+    expect(find.text('Personal information'), findsNothing);
     expect(tester.getRect(bar), initialRect);
+    expect(tester.getRect(header), headerRect);
 
     await _selectSection(tester, 'projects');
     expect(_selectedSection(tester), 2);
     expect(find.text('My projects').hitTestable(), findsOneWidget);
+    expect(find.text('Fee Management System'), findsOneWidget);
+    expect(find.text('Attendance Management System'), findsOneWidget);
+    expect(find.text('Inventory Management System'), findsOneWidget);
+    expect(find.byType(SkillsSection), findsNothing);
+    expect(find.text('About me'), findsNothing);
+    expect(find.text('Personal information'), findsNothing);
     expect(tester.getRect(bar), initialRect);
+    expect(tester.getRect(header), headerRect);
 
     await _selectSection(tester, 'info');
     expect(_selectedSection(tester), 3);
     expect(find.text('Personal information').hitTestable(), findsOneWidget);
+    expect(find.byType(ProjectsSection), findsNothing);
+    expect(find.byType(SkillsSection), findsNothing);
+    expect(find.text('About me'), findsNothing);
     expect(tester.getRect(bar), initialRect);
+    expect(tester.getRect(header), headerRect);
 
     await _selectSection(tester, 'profile');
     expect(_selectedSection(tester), 0);
@@ -393,45 +393,77 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Section navigation preserves animations and follows scrolling', (
+  testWidgets('Swiping below the profile updates the selected tab', (
     tester,
   ) async {
     await _openPortal(tester);
+    final pages = find.byType(PageView);
+    final header = find.byKey(const ValueKey('profile-header'));
+    final initialRect = tester.getRect(header);
+
+    await tester.drag(pages, const Offset(-285, 0));
+    await tester.pumpAndSettle();
+    expect(_selectedSection(tester), 1);
+    expect(find.text('Flutter & Dart').hitTestable(), findsOneWidget);
+    expect(tester.getRect(header), initialRect);
+
+    await tester.drag(pages, const Offset(285, 0));
+    await tester.pumpAndSettle();
+    expect(_selectedSection(tester), 0);
+    expect(find.text('About me').hitTestable(), findsOneWidget);
+    expect(tester.getRect(header), initialRect);
+  });
+
+  testWidgets('Tabs preserve card state and independent scroll positions', (
+    tester,
+  ) async {
+    await _openPortal(tester, width: 320, height: 640);
     await tester.tap(find.byKey(const ValueKey('profile-photo-button')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Read more'));
     await tester.tap(find.text('Read more'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.textContaining('©'));
+    await tester.pumpAndSettle();
+    final scrollable = find.descendant(
+      of: find.byType(SingleChildScrollView),
+      matching: find.byType(Scrollable),
+    );
+    final profileOffset = tester
+        .state<ScrollableState>(scrollable)
+        .position
+        .pixels;
+    expect(profileOffset, greaterThan(0));
 
     await _selectSection(tester, 'info');
+    final hide = find.widgetWithText(TextButton, 'Hide');
+    await tester.tap(hide);
+    await tester.pumpAndSettle();
+    await tester.drag(scrollable, const Offset(0, -280));
+    await tester.pumpAndSettle();
+    final infoOffset = tester
+        .state<ScrollableState>(scrollable)
+        .position
+        .pixels;
+    expect(infoOffset, greaterThan(0));
+    expect(_selectedSection(tester), 3);
+
     await _selectSection(tester, 'profile');
     expect(
       tester.getSize(find.byKey(const ValueKey('profile-avatar'))).width,
       150,
     );
     expect(find.text('Show less'), findsOneWidget);
-
-    await tester.ensureVisible(find.text('Personal information'));
-    await tester.pumpAndSettle();
-    expect(_selectedSection(tester), 3);
-    await tester.ensureVisible(find.byKey(const ValueKey('profile-avatar')));
-    await tester.pumpAndSettle();
-    expect(_selectedSection(tester), 0);
-
-    // A new tap can replace a scroll already in progress.
-    await tester.tap(find.byKey(const ValueKey('nav-projects')));
-    await tester.pump(const Duration(milliseconds: 80));
-    await tester.tap(find.byKey(const ValueKey('nav-skills')));
-    await tester.pumpAndSettle();
-    expect(_selectedSection(tester), 1);
     expect(
-      find
-          .descendant(
-            of: find.byType(SkillsSection),
-            matching: find.text('Skills'),
-          )
-          .hitTestable(),
-      findsOneWidget,
+      tester.state<ScrollableState>(scrollable).position.pixels,
+      profileOffset,
+    );
+
+    await _selectSection(tester, 'info');
+    expect(_detailsOpacity(tester), 0);
+    expect(
+      tester.state<ScrollableState>(scrollable).position.pixels,
+      infoOffset,
     );
     expect(tester.takeException(), isNull);
   });
@@ -441,6 +473,8 @@ void main() {
     (tester) async {
       await _openPortal(tester);
       await _selectSection(tester, 'info');
+      await tester.tap(find.widgetWithText(TextButton, 'Hide'));
+      await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Logout'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(TextButton, 'Logout'));
@@ -452,6 +486,10 @@ void main() {
       expect(_selectedSection(tester), 0);
       expect(find.text('Sameer Abdullah').hitTestable(), findsOneWidget);
       expect(find.text('Muhammad Zain Khan'), findsNothing);
+      await _selectSection(tester, 'info');
+      expect(_detailsOpacity(tester), 1);
+      expect(_personalDetail('64860'), findsOneWidget);
+      expect(_personalDetail('66157'), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
