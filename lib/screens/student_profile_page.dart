@@ -6,6 +6,7 @@ import '../models/student.dart';
 import '../navigation/fade_route.dart';
 import '../theme/app_theme.dart';
 import '../widgets/portfolio_sections.dart';
+import '../assignment_2/drawer_demo.dart';
 import 'login_page.dart';
 
 class StudentProfilePage extends StatefulWidget {
@@ -66,11 +67,35 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    drawer: _buildDrawer(context),
     appBar: AppBar(
       title: const Text('My Portfolio'),
       automaticallyImplyLeading: false,
+      leading: Builder(
+        builder: (context) => IconButton(
+          tooltip: 'Open Navigation Drawer',
+          icon: const Icon(Icons.menu_rounded),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       systemOverlayStyle: SystemUiOverlayStyle.dark,
       actions: [
+        IconButton(
+          key: const ValueKey('drawer-demo-button'),
+          tooltip: 'Drawer Demo',
+          style: IconButton.styleFrom(
+            backgroundColor: PortalColors.tint,
+            foregroundColor: PortalColors.primary,
+          ),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const DrawerHomePage(),
+            ),
+          ),
+          icon: const Icon(Icons.menu_open_rounded),
+        ),
+        const SizedBox(width: 4),
         IconButton(
           tooltip: 'Logout',
           style: IconButton.styleFrom(
@@ -200,6 +225,115 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
       ),
     ),
   );
+
+  Widget _buildDrawer(BuildContext context) => Drawer(
+        backgroundColor: PortalColors.background,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            UserAccountsDrawerHeader(
+              accountName: Text(
+                widget.student.name,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              accountEmail: Text(widget.student.email),
+              currentAccountPicture: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    widget.student.photo,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: Text(
+                        widget.student.name.isNotEmpty ? widget.student.name[0] : 'S',
+                        style: const TextStyle(
+                          color: PortalColors.primary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              decoration: const BoxDecoration(
+                color: PortalColors.primary,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home, color: PortalColors.primary),
+              title: const Text('Home'),
+              onTap: () {
+                Navigator.pop(context);
+                _openTab(0);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.school, color: PortalColors.primary),
+              title: const Text('Academic Info'),
+              onTap: () {
+                Navigator.pop(context);
+                _openTab(1);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.auto_stories, color: PortalColors.primary),
+              title: const Text('About Me'),
+              onTap: () {
+                Navigator.pop(context);
+                _openTab(0);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.contact_mail, color: PortalColors.primary),
+              title: const Text('Contact Details'),
+              onTap: () {
+                Navigator.pop(context);
+                _openTab(3);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.settings, color: PortalColors.muted),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                _showSettingsDialog(context);
+              },
+            ),
+          ],
+        ),
+      );
+
+  void _showSettingsDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Settings'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Signed in as: ${widget.student.name}'),
+            const SizedBox(height: 8),
+            Text('Email: ${widget.student.email}'),
+            const SizedBox(height: 8),
+            const Text('App Version: 1.0.0 (Assignment 2)'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _PortfolioTabPage extends StatefulWidget {

@@ -114,7 +114,8 @@ class ProjectsSection extends StatelessWidget {
       children: [
         for (final (index, (icon, title, description))
             in _projects.indexed) ...[
-          if (index > 0) const Divider(height: 28, color: PortalColors.line),
+          if (index > 0)
+            const Divider(height: 28, color: PortalColors.line),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

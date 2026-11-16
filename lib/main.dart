@@ -6,6 +6,7 @@ import 'widgets/mobile_preview.dart';
 
 export 'screens/login_page.dart';
 export 'screens/student_profile_page.dart';
+export 'assignment_2/drawer_demo.dart';
 
 void main() => runApp(const MyApp());
 

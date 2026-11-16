@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
@@ -16,7 +15,7 @@ class MobilePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    if (!kIsWeb || media.size.shortestSide < 600) return child;
+    if (media.size.width <= 480) return child;
 
     const insets = EdgeInsets.only(top: _statusBar, bottom: _homeBar);
     return ColoredBox(
